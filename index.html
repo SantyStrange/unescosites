@@ -1,0 +1,1039 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RRB CBT - UNESCO CITES</title>
+<style>
+    :root {
+        --bg-color: #121212;
+        --surface-color: #1e1e1e;
+        --primary-cyan: #00e5ff;
+        --primary-blue: #2979ff;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+        --border-color: #333333;
+        
+        --color-not-visited: #9e9e9e;
+        --color-not-answered: #f44336;
+        --color-answered: #4caf50;
+        --color-marked: #9c27b0;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    
+    /* 100dvh prevents mobile browser URL bars from hiding the bottom elements */
+    body { background-color: var(--bg-color); color: var(--text-primary); height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+    
+    /* Views */
+    .view { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+    .view.active { display: flex; }
+    
+    /* Landing Page */
+    .landing-container { max-width: 800px; margin: auto; padding: 40px 20px; text-align: center; overflow-y: auto; }
+    .landing-container h1 { color: var(--primary-cyan); font-size: 2rem; margin-bottom: 20px; }
+    .instructions { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 10px; padding: 25px; text-align: left; margin-bottom: 30px; line-height: 1.6; }
+    .instructions h3 { color: var(--primary-cyan); margin-bottom: 15px; }
+    .instructions ul { margin-left: 20px; }
+    .start-btn { background: var(--primary-blue); color: #fff; border: none; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; border-radius: 5px; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
+    .start-btn:hover { background: #1565c0; transform: scale(1.05); }
+
+    /* Header */
+    .header { background-color: var(--surface-color); border-bottom: 2px solid var(--primary-cyan); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; z-index: 50; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    .header h1 { font-size: 1.2rem; font-weight: 600; color: var(--primary-cyan); }
+    .timer-container { font-size: 1.2rem; font-weight: bold; background: #2a2a2a; padding: 5px 15px; border-radius: 5px; border: 1px solid var(--primary-blue); }
+    
+    /* Mobile Top Bar (Toggle Palette & Submit) */
+    .mobile-top-bar { display: none; width: 100%; flex-shrink: 0; z-index: 40; border-bottom: 1px solid var(--border-color); }
+    .mobile-top-bar button { flex: 1; padding: 12px; border: none; font-weight: bold; font-size: 0.95rem; cursor: pointer; text-transform: uppercase; }
+    .btn-toggle-top { background: #2a2a2a; color: var(--primary-cyan); border-right: 1px solid var(--border-color) !important; }
+    .btn-submit-top { background: var(--color-answered); color: #fff; }
+
+    /* Main Layout */
+    .main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
+    
+    /* Quiz Left Panel */
+    .quiz-left-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    
+    /* Question Scrolling Area */
+    .question-scroll-area { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 40px; }
+    .q-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold; font-size: 1.1rem; color: var(--primary-cyan); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+    .question-text { font-size: 1.1rem; line-height: 1.6; margin-bottom: 15px; }
+    .question-tamil { font-size: 1.1rem; line-height: 1.6; color: var(--primary-cyan); margin-bottom: 25px; }
+    
+    .options-list { display: flex; flex-direction: column; gap: 12px; }
+    .option-label { display: flex; align-items: center; padding: 12px 15px; background: #2a2a2a; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .option-label:hover { border-color: var(--primary-cyan); background: #333; }
+    .option-label input { margin-right: 15px; transform: scale(1.2); accent-color: var(--primary-cyan); }
+    
+    /* Pinned Action Buttons Footer */
+    .action-buttons { flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 10px; padding: 15px 20px; background: var(--surface-color); border-top: 1px solid var(--border-color); z-index: 10; box-shadow: 0 -4px 10px rgba(0,0,0,0.3); }
+    .btn { padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; text-transform: uppercase; font-size: 0.85rem; display: flex; justify-content: center; align-items: center; text-align: center; }
+    .btn-prev { background: #424242; }
+    .btn-prev:hover { background: #616161; }
+    .btn-clear { background: #f44336; }
+    .btn-clear:hover { background: #d32f2f; }
+    .btn-mark { background: var(--color-marked); }
+    .btn-mark:hover { background: #7b1fa2; }
+    .btn-save { background: var(--primary-blue); margin-left: auto; }
+    .btn-save:hover { background: #1565c0; }
+
+    /* Palette Section */
+    .palette-section { width: 320px; background: var(--surface-color); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; transition: transform 0.3s ease; flex-shrink: 0; }
+    .palette-header { padding: 15px; border-bottom: 1px solid var(--border-color); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 15px; overflow-y: auto; }
+    .q-bubble { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9rem; color: #fff; background: var(--color-not-visited); border: 2px solid transparent; }
+    .q-bubble.active { border-color: var(--primary-cyan); transform: scale(1.1); box-shadow: 0 0 8px var(--primary-cyan); }
+    
+    .status-0 { background: var(--color-not-visited); color: #000; } 
+    .status-1 { background: var(--color-not-answered); } 
+    .status-2 { background: var(--color-answered); } 
+    .status-3 { background: var(--color-marked); } 
+    .status-4 { background: var(--color-marked); position: relative; } 
+    .status-4::after { content: ''; position: absolute; bottom: 2px; right: 2px; width: 8px; height: 8px; background: var(--color-answered); border-radius: 50%; border: 1px solid #fff; }
+
+    .legend { padding: 15px; font-size: 0.8rem; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-box { width: 15px; height: 15px; border-radius: 3px; }
+    .btn-submit-desktop { background: var(--color-answered); width: 100%; padding: 12px; }
+
+    /* Custom Modals (No native alerts) */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+    .modal-content { background: var(--surface-color); padding: 30px; border-radius: 10px; width: 100%; max-width: 500px; border: 1px solid var(--border-color); text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .modal-content h2 { color: var(--primary-cyan); margin-bottom: 20px; }
+    .modal-actions { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
+    
+    /* Results View */
+    .results-container { max-width: 900px; margin: auto; padding: 40px 20px; text-align: center; overflow-y: auto; width: 100%; }
+    .result-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 30px 0; }
+    .stat-box { background: #2a2a2a; padding: 20px; border-radius: 8px; border-bottom: 4px solid #666; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .stat-box.st-score { border-color: var(--primary-cyan); grid-column: span 2; }
+    .stat-box.st-correct { border-color: var(--color-answered); }
+    .stat-box.st-wrong { border-color: var(--color-not-answered); }
+    .stat-box h3 { font-size: 2.5rem; margin-bottom: 5px; }
+    .stat-box.st-score h3 { font-size: 3.5rem; color: var(--primary-cyan); }
+    
+    /* Tabbed Review Section */
+    #detailed-review-section { display: none; margin-top: 40px; }
+    .review-tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+    .tab-btn { background: #2a2a2a; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 12px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; flex: 1; min-width: 110px; text-align: center; transition: 0.2s; }
+    .tab-btn:hover { background: #333; }
+    .tab-btn.active { color: #fff; border-bottom: 3px solid; }
+    .tab-btn[data-tab="correct"].active { border-color: var(--color-answered); background: rgba(76, 175, 80, 0.1); }
+    .tab-btn[data-tab="wrong"].active { border-color: var(--color-not-answered); background: rgba(244, 67, 54, 0.1); }
+    .tab-btn[data-tab="unattempted"].active { border-color: var(--color-not-visited); background: rgba(158, 158, 158, 0.1); }
+    
+    .tab-content { display: none; text-align: left; }
+    .tab-content.active { display: block; }
+    
+    .review-item { padding: 20px; background: #2a2a2a; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid var(--border-color); }
+    .review-item.correct { border-left-color: var(--color-answered); }
+    .review-item.wrong { border-left-color: var(--color-not-answered); }
+    .review-item.unattempted { border-left-color: var(--color-not-visited); }
+    
+    .answer-tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; margin-top: 10px; }
+    .tag-correct { background: rgba(76, 175, 80, 0.2); color: #81c784; border: 1px solid #4caf50; }
+    .tag-wrong { background: rgba(244, 67, 54, 0.2); color: #e57373; border: 1px solid #f44336; }
+    .tag-unattempted { background: rgba(158, 158, 158, 0.2); color: #e0e0e0; border: 1px solid #9e9e9e; }
+    
+    .explanation-box { margin-top: 12px; padding: 12px; background: #1e1e1e; border-radius: 5px; border-left: 3px solid var(--primary-cyan); font-size: 0.95rem; line-height: 1.5; color: #ddd; }
+
+    /* MOBILE SPECIFIC OVERRIDES */
+    @media (max-width: 768px) {
+        .mobile-top-bar { display: flex; }
+        .palette-section { position: absolute; top: 0; right: 0; height: 100%; transform: translateX(100%); z-index: 100; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+        .palette-section.open { transform: translateX(0); }
+        
+        .result-grid { grid-template-columns: 1fr; }
+        .stat-box.st-score { grid-column: span 1; }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            padding: 10px;
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+        }
+        .btn-save { grid-column: span 2; margin-left: 0; padding: 15px; font-size: 1.1rem; order: 1; }
+        .btn-mark { order: 2; padding: 12px; }
+        .btn-clear { order: 3; padding: 12px; }
+        .btn-prev { grid-column: span 2; order: 4; padding: 12px; }
+    }
+</style>
+</head>
+<body>
+
+<!-- VIEW 1: Landing Page -->
+<div id="view-landing" class="view active">
+    <div class="landing-container">
+        <h1>RRB CBT: UNESCO Sites</h1>
+        <div class="instructions">
+            <h3>📝 Instructions:</h3>
+            <ul>
+                <li><strong>Total Questions:</strong> 50 (Bilingual: English & Tamil).</li>
+                <li><strong>Time Allotted:</strong> 15 Minutes.</li>
+                <li><strong>Marking Scheme:</strong> +1 mark for correct answers, <strong>-0.33 marks</strong> for incorrect answers.</li>
+                <li>Questions are shuffled automatically for every attempt.</li>
+                <li>Use the Question Palette to navigate. You can Mark questions for review.</li>
+                <li>Ensure you have a stable connection. Do not refresh the page during the exam.</li>
+            </ul>
+        </div>
+        <button class="start-btn" onclick="startQuiz()">I am ready to begin</button>
+    </div>
+</div>
+
+<!-- VIEW 2: Main Quiz -->
+<div id="view-quiz" class="view">
+    
+    <div class="header">
+        <h1>UNESCO CITES INDIA</h1>
+        <div class="timer-container" id="timer">15:00</div>
+    </div>
+
+    <!-- Mobile Explicit Top Bar -->
+    <div class="mobile-top-bar">
+        <button class="btn-toggle-top" onclick="togglePalette()">☰ Question Palette</button>
+        <button class="btn-submit-top" onclick="showSubmitConfirm()">Submit Exam</button>
+    </div>
+
+    <div class="main-container">
+        
+        <!-- Question Panel (Scrollable content + Fixed Footer) -->
+        <div class="quiz-left-panel">
+            
+            <div class="question-scroll-area">
+                <div class="q-header">
+                    <span id="q-no">Question 1</span>
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Negative Marks: -0.33</span>
+                </div>
+                
+                <div class="question-text" id="q-text-en">Loading...</div>
+                <div class="question-tamil" id="q-text-ta">ஏற்றுகிறது...</div>
+                
+                <div class="options-list" id="options-container"></div>
+            </div>
+            
+            <!-- Fixed Action Buttons Footer -->
+            <div class="action-buttons">
+                <button class="btn btn-save" onclick="saveAndNext()">Save & Next ►</button>
+                <button class="btn btn-mark" onclick="markAndNext()">Mark & Next</button>
+                <button class="btn btn-clear" onclick="clearResponse()">Clear</button>
+                <button class="btn btn-prev" onclick="prevQuestion()">◄ Previous</button>
+            </div>
+            
+        </div>
+        
+        <!-- Collapsible Palette -->
+        <div class="palette-section" id="palette">
+            <div class="palette-header">
+                <span>Question Palette</span>
+                <button onclick="togglePalette()" class="btn btn-prev" style="padding: 5px; display: none;" id="close-palette-btn">X</button>
+            </div>
+            <div class="palette-grid" id="palette-grid"></div>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-box status-2"></div> Answered</div>
+                <div class="legend-item"><div class="legend-box status-1"></div> Not Answered</div>
+                <div class="legend-item"><div class="legend-box status-0"></div> Not Visited</div>
+                <div class="legend-item"><div class="legend-box status-3"></div> Marked</div>
+                <div class="legend-item"><div class="legend-box status-4"></div> Ans & Marked</div>
+            </div>
+            <div style="padding: 15px;">
+                <button class="btn btn-submit btn-submit-desktop" onclick="showSubmitConfirm()">SUBMIT EXAM</button>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Custom Confirmation Modal -->
+<div class="modal-overlay" id="confirm-modal">
+    <div class="modal-content">
+        <h2>Submit Exam?</h2>
+        <p>Are you sure you want to submit? You will not be able to change your answers.</p>
+        <p id="unanswered-warning" style="color: var(--color-not-answered); margin-top: 10px; font-weight: bold; display: none;"></p>
+        <div class="modal-actions">
+            <button class="btn btn-prev" onclick="closeSubmitConfirm()">No, Go Back</button>
+            <button class="btn btn-submit" style="width: auto; margin-top: 0; padding: 10px 20px;" onclick="submitExam()">Yes, Submit</button>
+        </div>
+    </div>
+</div>
+
+<!-- VIEW 3: Results & Review -->
+<div id="view-results" class="view">
+    <div class="results-container">
+        <h1 style="color: var(--primary-cyan); font-size: 2.2rem; margin-bottom: 20px;">Exam Submitted Successfully</h1>
+        
+        <div class="result-grid">
+            <div class="stat-box st-score">
+                <div>Final Score</div>
+                <h3 id="res-score">0.00</h3>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">(Out of 50)</div>
+            </div>
+            <div class="stat-box st-correct">
+                <h3 id="res-correct">0</h3>
+                <div>Correct</div>
+            </div>
+            <div class="stat-box st-wrong">
+                <h3 id="res-wrong">0</h3>
+                <div>Incorrect</div>
+            </div>
+        </div>
+        
+        <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 25px;">Unattempted Questions: <strong id="res-unattempted" style="color: #fff;">0</strong></p>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;" id="post-exam-actions">
+            <button class="btn btn-save" onclick="showDetailedReview()">View Detailed Review</button>
+            <button class="btn btn-prev" onclick="location.reload()">Restart Quiz</button>
+        </div>
+        
+        <!-- 3-Section Tabbed Review -->
+        <div id="detailed-review-section">
+            <h2 style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Test Review</h2>
+            
+            <div class="review-tabs">
+                <button class="tab-btn" data-tab="correct" onclick="switchTab('correct')">Correct (<span id="tab-count-correct">0</span>)</button>
+                <button class="tab-btn" data-tab="wrong" onclick="switchTab('wrong')">Incorrect (<span id="tab-count-wrong">0</span>)</button>
+                <button class="tab-btn" data-tab="unattempted" onclick="switchTab('unattempted')">Unattempted (<span id="tab-count-unattempted">0</span>)</button>
+            </div>
+            
+            <div id="review-content-correct" class="tab-content"></div>
+            <div id="review-content-wrong" class="tab-content"></div>
+            <div id="review-content-unattempted" class="tab-content"></div>
+        </div>
+        
+    </div>
+</div>
+
+<script>
+// Base Data containing 50 questions
+const baseQuizData = [
+    // ================= 20 UNESCO INSCRIPTION YEAR QUESTIONS (Q1 - Q20) =================
+    // 1
+    {
+        qE: "In which year were the Ajanta Caves inscribed as a UNESCO World Heritage Site?",
+        qT: "அஜந்தா குகைகள் எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரியத் தளமாக அறிவிக்கப்பட்டது?",
+        oE: ["1982", "1983", "1984", "1985"],
+        oT: ["1982", "1983", "1984", "1985"],
+        a: 1,
+        exp: "Ajanta Caves, along with Ellora Caves, Agra Fort, and Taj Mahal, were inscribed as UNESCO World Heritage Sites in 1983."
+    },
+    // 2
+    {
+        qE: "In which year was the Sun Temple at Konark designated as a UNESCO World Heritage Site?",
+        qT: "கொனார்க் சூரியனார் கோயில் எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரியத் தளமாக அறிவிக்கப்பட்டது?",
+        oE: ["1983", "1984", "1986", "1987"],
+        oT: ["1983", "1984", "1986", "1987"],
+        a: 1,
+        exp: "The Sun Temple at Konark in Odisha was inscribed as a UNESCO World Heritage Site in 1984."
+    },
+    // 3
+    {
+        qE: "In which year was Kaziranga National Park added to the UNESCO World Heritage list?",
+        qT: "காசிரங்கா தேசியப் பூங்கா எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரியப் பட்டியலில் சேர்க்கப்பட்டது?",
+        oE: ["1984", "1985", "1987", "1988"],
+        oT: ["1984", "1985", "1987", "1988"],
+        a: 1,
+        exp: "Kaziranga National Park in Assam was inscribed as a Natural World Heritage Site in 1985."
+    },
+    // 4
+    {
+        qE: "In which year were the Churches and Convents of Goa inscribed by UNESCO?",
+        qT: "கோவாவின் தேவாலயங்கள் மற்றும் கன்னியர் மடங்கள் எந்த ஆண்டு யுனெஸ்கோவால் சேர்க்கப்பட்டன?",
+        oE: ["1985", "1986", "1987", "1989"],
+        oT: ["1985", "1986", "1987", "1989"],
+        a: 1,
+        exp: "The Churches and Convents of Goa were inscribed as a UNESCO World Heritage Site in 1986."
+    },
+    // 5
+    {
+        qE: "In which year was the Group of Monuments at Hampi recognized as a UNESCO World Heritage Site?",
+        qT: "ஹம்பி நினைவுச்சின்னங்களின் தொகுப்பு எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரியத் தளமாக அங்கீகரிக்கப்பட்டது?",
+        oE: ["1984", "1986", "1987", "1989"],
+        oT: ["1984", "1986", "1987", "1989"],
+        a: 1,
+        exp: "The Group of Monuments at Hampi in Karnataka was inscribed in 1986."
+    },
+    // 6
+    {
+        qE: "In which year were the Elephanta Caves inscribed as a UNESCO World Heritage Site?",
+        qT: "எலிஃபண்டா குகைகள் எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரியத் தளமாக அறிவிக்கப்பட்டது?",
+        oE: ["1983", "1986", "1987", "1988"],
+        oT: ["1983", "1986", "1987", "1988"],
+        a: 2,
+        exp: "Elephanta Caves in Maharashtra were inscribed as a Cultural World Heritage Site in 1987."
+    },
+    // 7
+    {
+        qE: "In which year were the Buddhist Monuments at Sanchi added to the UNESCO World Heritage list?",
+        qT: "சாஞ்சி பௌத்த நினைவுச்சின்னங்கள் எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரியப் பட்டியலில் சேர்க்கப்பட்டன?",
+        oE: ["1987", "1988", "1989", "1993"],
+        oT: ["1987", "1988", "1989", "1993"],
+        a: 2,
+        exp: "The Buddhist Monuments at Sanchi in Madhya Pradesh were inscribed in 1989."
+    },
+    // 8
+    {
+        qE: "In which year was Humayun's Tomb in New Delhi inscribed as a UNESCO World Heritage Site?",
+        qT: "புதுடெல்லியில் உள்ள ஹுமாயூன் கல்லறை எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரியத் தளமாக அறிவிக்கப்பட்டது?",
+        oE: ["1989", "1993", "1999", "2002"],
+        oT: ["1989", "1993", "1999", "2002"],
+        a: 1,
+        exp: "Humayun's Tomb and Qutub Minar were both inscribed as UNESCO World Heritage Sites in 1993."
+    },
+    // 9
+    {
+        qE: "In which year was the Darjeeling Himalayan Railway first inscribed under the Mountain Railways of India?",
+        qT: "இந்தியாவின் மலை ரயில் பாதைகளின் கீழ் டார்ஜிலிங் இமயமலை ரயில்வே முதன்முதலில் எந்த ஆண்டு சேர்க்கப்பட்டது?",
+        oE: ["1993", "1999", "2005", "2008"],
+        oT: ["1993", "1999", "2005", "2008"],
+        a: 1,
+        exp: "The Darjeeling Himalayan Railway was inscribed in 1999, followed by the Nilgiri Mountain Railway in 2005 and the Kalka-Shimla Railway in 2008."
+    },
+    // 10
+    {
+        qE: "In which year was the Mahabodhi Temple Complex at Bodh Gaya inscribed by UNESCO?",
+        qT: "புத்தகயாவில் உள்ள மகாபோதி கோயில் வளாகம் எந்த ஆண்டு யுனெஸ்கோவால் சேர்க்கப்பட்டது?",
+        oE: ["1999", "2002", "2003", "2004"],
+        oT: ["1999", "2002", "2003", "2004"],
+        a: 1,
+        exp: "The Mahabodhi Temple Complex in Bihar was inscribed as a UNESCO World Heritage Site in 2002."
+    },
+    // 11
+    {
+        qE: "In which year were the Rock Shelters of Bhimbetka inscribed as a UNESCO World Heritage Site?",
+        qT: "பிம்பேட்கா பாறை வாழிடங்கள் எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரியத் தளமாக அறிவிக்கப்பட்டன?",
+        oE: ["2002", "2003", "2004", "2007"],
+        oT: ["2002", "2003", "2004", "2007"],
+        a: 1,
+        exp: "The Rock Shelters of Bhimbetka in Madhya Pradesh were inscribed in 2003."
+    },
+    // 12
+    {
+        qE: "In which year was the Chhatrapati Shivaji Maharaj Terminus in Mumbai inscribed by UNESCO?",
+        qT: "மும்பையில் உள்ள சத்ரபதி சிவாஜி மகாராஜ் முனையம் எந்த ஆண்டு யுனெஸ்கோவால் சேர்க்கப்பட்டது?",
+        oE: ["2003", "2004", "2007", "2010"],
+        oT: ["2003", "2004", "2007", "2010"],
+        a: 1,
+        exp: "Chhatrapati Shivaji Maharaj Terminus was inscribed as a UNESCO World Heritage Site in 2004."
+    },
+    // 13
+    {
+        qE: "In which year was the Red Fort Complex in Old Delhi designated as a UNESCO World Heritage Site?",
+        qT: "பழைய டெல்லியில் உள்ள செங்கோட்டை வளாகம் எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரியத் தளமாக அறிவிக்கப்பட்டது?",
+        oE: ["2004", "2007", "2010", "2012"],
+        oT: ["2004", "2007", "2010", "2012"],
+        a: 1,
+        exp: "The Red Fort Complex was inscribed as a Cultural World Heritage Site in 2007."
+    },
+    // 14
+    {
+        qE: "In which year were the Western Ghats inscribed as a Natural World Heritage Site?",
+        qT: "மேற்குத் தொடர்ச்சி மலைகள் எந்த ஆண்டு இயற்கை உலகப் பாரம்பரியத் தளமாக அறிவிக்கப்பட்டன?",
+        oE: ["2010", "2012", "2013", "2014"],
+        oT: ["2010", "2012", "2013", "2014"],
+        a: 1,
+        exp: "The Western Ghats, traversing six Indian states, were inscribed in 2012."
+    },
+    // 15
+    {
+        qE: "In which year was Rani-ki-Vav in Gujarat inscribed as a UNESCO World Heritage Site?",
+        qT: "குஜராத்தில் உள்ள ராணி-கி-வாவ் எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரியத் தளமாக அறிவிக்கப்பட்டது?",
+        oE: ["2013", "2014", "2016", "2017"],
+        oT: ["2013", "2014", "2016", "2017"],
+        a: 1,
+        exp: "Rani-ki-Vav (The Queen's Stepwell) at Patan, Gujarat, was inscribed in 2014."
+    },
+    // 16
+    {
+        qE: "In which year was Khangchendzonga National Park inscribed as India's first Mixed Heritage Site?",
+        qT: "கஞ்சன்ஜங்கா தேசியப் பூங்கா இந்தியாவின் முதல் கலப்புப் பாரம்பரியத் தளமாக எந்த ஆண்டு அறிவிக்கப்பட்டது?",
+        oE: ["2014", "2016", "2017", "2018"],
+        oT: ["2014", "2016", "2017", "2018"],
+        a: 1,
+        exp: "Khangchendzonga National Park in Sikkim was inscribed as a Mixed Heritage Site in 2016."
+    },
+    // 17
+    {
+        qE: "In which year did the Historic City of Ahmadabad receive UNESCO World Heritage status?",
+        qT: "அகமதாபாத் வரலாற்று நகரம் எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரிய அந்தஸ்தைப் பெற்றது?",
+        oE: ["2016", "2017", "2018", "2019"],
+        oT: ["2016", "2017", "2018", "2019"],
+        a: 1,
+        exp: "The Historic City of Ahmadabad became the first Indian city to receive UNESCO World Heritage status in 2017."
+    },
+    // 18
+    {
+        qE: "In which year were the Moidams of the Ahom Dynasty inscribed as a UNESCO World Heritage Site?",
+        qT: "அகோம் வம்சத்தின் மொய்தாம்கள் எந்த ஆண்டு யுனெஸ்கோ உலகப் பாரம்பரியத் தளமாக அறிவிக்கப்பட்டன?",
+        oE: ["2021", "2023", "2024", "2025"],
+        oT: ["2021", "2023", "2024", "2025"],
+        a: 2,
+        exp: "Moidams in Charaideo district, Assam, were inscribed in July 2024 during the 46th session of the World Heritage Committee in New Delhi."
+    },
+    // 19
+    {
+        qE: "In which year were the Maratha Military Landscapes of India inscribed by UNESCO?",
+        qT: "இந்தியாவின் மராட்டிய இராணுவ நிலப்பரப்புகள் எந்த ஆண்டு யுனெஸ்கோவால் சேர்க்கப்பட்டன?",
+        oE: ["2023", "2024", "2025", "2026"],
+        oT: ["2023", "2024", "2025", "2026"],
+        a: 2,
+        exp: "The Maratha Military Landscapes of India, comprising 12 forts across Maharashtra and Tamil Nadu, were inscribed in 2025."
+    },
+    // 20
+    {
+        qE: "In which year was the Ancient Buddhist Site of Sarnath inscribed as India's 45th UNESCO World Heritage Site?",
+        qT: "சாரநாத் பண்டைய பௌத்தத் தளம் இந்தியாவின் 45-வது யுனெஸ்கோ உலகப் பாரம்பரியத் தளமாக எந்த ஆண்டு அறிவிக்கப்பட்டது?",
+        oE: ["2023", "2024", "2025", "2026"],
+        oT: ["2023", "2024", "2025", "2026"],
+        a: 3,
+        exp: "The Ancient Buddhist Site of Sarnath in Varanasi district, Uttar Pradesh, was inscribed in 2026."
+    },
+
+    // ================= 25 MEDIUM-DIFFICULTY NON-YEAR QUESTIONS (Q21 - Q45) =================
+    // 21
+    {
+        qE: "On which date is World Heritage Day celebrated annually?",
+        qT: "உலகப் பாரம்பரிய தினம் ஆண்டுதோறும் எந்தத் தேதியில் கொண்டாடப்படுகிறது?",
+        oE: ["18th April", "22nd April", "18th May", "5th June"],
+        oT: ["ஏப்ரல் 18", "ஏப்ரல் 22", "மே 18", "ஜூன் 5"],
+        a: 0,
+        exp: "World Heritage Day is celebrated annually on 18th April."
+    },
+    // 22
+    {
+        qE: "What is the exact category-wise distribution of India's 45 UNESCO World Heritage Sites?",
+        qT: "இந்தியாவில் உள்ள 45 யுனெஸ்கோ உலகப் பாரம்பரியத் தளங்களின் சரியான வகைப்பாடு என்ன?",
+        oE: ["36 Cultural, 8 Natural, 1 Mixed", "37 Cultural, 7 Natural, 1 Mixed", "35 Cultural, 8 Natural, 2 Mixed", "38 Cultural, 6 Natural, 1 Mixed"],
+        oT: ["36 கலாச்சாரம், 8 இயற்கை, 1 கலப்பு", "37 கலாச்சாரம், 7 இயற்கை, 1 கலப்பு", "35 கலாச்சாரம், 8 இயற்கை, 2 கலப்பு", "38 கலாச்சாரம், 6 இயற்கை, 1 கலப்பு"],
+        a: 1,
+        exp: "India has a total of 45 UNESCO World Heritage Sites: 37 Cultural, 7 Natural, and 1 Mixed."
+    },
+    // 23
+    {
+        qE: "Which Rashtrakuta king built the monolithic Kailasha Temple at the Ellora Caves?",
+        qT: "எல்லோரா குகைகளில் உள்ள ஒற்றைக்கல் கைலாசநாதர் கோயிலைக் கட்டிய ராஷ்டிரகூட மன்னர் யார்?",
+        oE: ["Dantidurga", "Krishna I", "Amoghavarsha", "Govinda III"],
+        oT: ["தந்திதுர்கர்", "முதலாம் கிருஷ்ணர்", "அமோகவர்ஷர்", "மூன்றாம் கோவிந்தர்"],
+        a: 1,
+        exp: "The Kailasha Temple (Cave 16) at Ellora is the world's largest monolithic rock-cut structure, built by Rashtrakuta King Krishna I."
+    },
+    // 24
+    {
+        qE: "Who was the chief architect of both the Taj Mahal and the Red Fort?",
+        qT: "தாஜ்மஹால் மற்றும் செங்கோட்டை ஆகிய இரண்டின் தலைமைக் கட்டிடக்கலைஞர் யார்?",
+        oE: ["Mirak Mirza Ghiyas", "Ustad Ahmad Lahori", "Frederick William Stevens", "Vidyadhar Bhattacharya"],
+        oT: ["மிராக் மிர்சா கியாஸ்", "உஸ்தாத் அகமது லஹோரி", "ஃபிரடெரிக் வில்லியம் ஸ்டீவன்ஸ்", "வித்யாதர் பட்டாச்சார்யா"],
+        a: 1,
+        exp: "Ustad Ahmad Lahori served as the chief architect for both the Taj Mahal in Agra and the Red Fort in Old Delhi."
+    },
+    // 25
+    {
+        qE: "Which ruler of the Eastern Ganga Dynasty built the Sun Temple at Konark?",
+        qT: "கொனார்க் சூரியனார் கோயிலைக் கட்டிய கிழக்கு கங்க வம்ச மன்னர் யார்?",
+        oE: ["Anantavarman Chodaganga", "Narasimhadeva I", "Narasimhavarman I", "Vikramaditya II"],
+        oT: ["அனந்தவர்மன் சோடகங்கன்", "முதலாம் நரசிம்மதேவர்", "முதலாம் நரசிம்மவர்மன்", "இரண்டாம் விக்ரமாதித்தன்"],
+        a: 1,
+        exp: "King Narasimhadeva I of the Eastern Ganga Dynasty built the Konark Sun Temple in the 13th century CE."
+    },
+    // 26
+    {
+        qE: "Which UNESCO World Heritage Site is depicted on the reverse of the new ₹50 Indian currency note?",
+        qT: "புதிய ₹50 இந்திய ரூபாய் நோட்டின் பின்புறத்தில் எந்த யுனெஸ்கோ உலகப் பாரம்பரியத் தளம் இடம்பெற்றுள்ளது?",
+        oE: ["Sun Temple, Konark", "Ellora Caves", "Hampi Stone Chariot", "Rani-ki-Vav"],
+        oT: ["கொனார்க் சூரியனார் கோயில்", "எல்லோரா குகைகள்", "ஹம்பி கல் தேர்", "ராணி-கி-வாவ்"],
+        a: 2,
+        exp: "The Stone Chariot of Hampi in Karnataka is depicted on the reverse of the new ₹50 currency note."
+    },
+    // 27
+    {
+        qE: "Which UNESCO World Heritage Site is featured on the reverse of the new ₹100 Indian currency note?",
+        qT: "புதிய ₹100 இந்திய ரூபாய் நோட்டின் பின்புறத்தில் எந்த யுனெஸ்கோ உலகப் பாரம்பரியத் தளம் இடம்பெற்றுள்ளது?",
+        oE: ["Sanchi Stupa", "Rani-ki-Vav", "Red Fort Complex", "Hampi Stone Chariot"],
+        oT: ["சாஞ்சி ஸ்தூபி", "ராணி-கி-வாவ்", "செங்கோட்டை வளாகம்", "ஹம்பி கல் தேர்"],
+        a: 1,
+        exp: "Rani-ki-Vav (The Queen's Stepwell) in Gujarat is depicted on the reverse of the new ₹100 currency note."
+    },
+    // 28
+    {
+        qE: "Which UNESCO World Heritage Site is depicted on the reverse of the new ₹200 Indian currency note?",
+        qT: "புதிய ₹200 இந்திய ரூபாய் நோட்டின் பின்புறத்தில் எந்த யுனெஸ்கோ உலகப் பாரம்பரியத் தளம் இடம்பெற்றுள்ளது?",
+        oE: ["Ellora Caves", "Rani-ki-Vav", "Sanchi Stupa", "Red Fort Complex"],
+        oT: ["எல்லோரா குகைகள்", "ராணி-கி-வாவ்", "சாஞ்சி ஸ்தூபி", "செங்கோட்டை வளாகம்"],
+        a: 2,
+        exp: "The Great Stupa of Sanchi in Madhya Pradesh is depicted on the reverse of the new ₹200 currency note."
+    },
+    // 29
+    {
+        qE: "The Basilica of Bom Jesus in Old Goa holds the sacred mortal remains of which saint?",
+        qT: "பழைய கோவாவில் உள்ள பசிலிக்கா ஆஃப் பாம் ஜீசஸ் தேவாலயம் எந்தப் புனிதரின் புனித உடலைக் கொண்டுள்ளது?",
+        oE: ["St. Thomas", "St. Francis Xavier", "St. Peter", "St. Augustine"],
+        oT: ["புனித தோமையார்", "புனித பிரான்சிஸ் சேவியர்", "புனித பேதுரு", "புனித அகஸ்டின்"],
+        a: 1,
+        exp: "The Basilica of Bom Jesus in Velha Goa holds the sacred mortal remains of St. Francis Xavier."
+    },
+    // 30
+    {
+        qE: "Which dynasty constructed the Khajuraho Group of Monuments in Madhya Pradesh?",
+        qT: "மத்தியப் பிரதேசத்தில் உள்ள கஜுராஹோ நினைவுச்சின்னங்களின் தொகுப்பை எந்த வம்சத்தினர் கட்டினர்?",
+        oE: ["Solanki Dynasty", "Chandela Dynasty", "Hoysala Dynasty", "Chalukya Dynasty"],
+        oT: ["சோலங்கி வம்சம்", "சந்தேல வம்சம்", "ஹொய்சாள வம்சம்", "சாளுக்கிய வம்சம்"],
+        a: 1,
+        exp: "The Khajuraho Group of Monuments was built by the Chandela Dynasty between 950 and 1050 CE."
+    },
+    // 31
+    {
+        qE: "The Buland Darwaza at Fatehpur Sikri was erected by Emperor Akbar to commemorate his victory over which region?",
+        qT: "ஃபதேபூர் சிக்ரியில் உள்ள புலந்த் தர்வாசா எந்தப் பகுதியின் மீதான வெற்றியை நினைவுகூரப் பேரரசர் அக்பரால் கட்டப்பட்டது?",
+        oE: ["Bengal", "Gujarat", "Malwa", "Deccan"],
+        oT: ["வங்காளம்", "குஜராத்", "மாளவம்", "தக்காணம்"],
+        a: 1,
+        exp: "Buland Darwaza at Fatehpur Sikri was erected to commemorate Mughal Emperor Akbar's victory over Gujarat."
+    },
+    // 32
+    {
+        qE: "Who built the Airavatesvara Temple at Darasuram, part of the Great Living Chola Temples?",
+        qT: "அழியாத சோழர் பெருங்கோயில்களின் ஒரு பகுதியான தாராசுரம் ஐராவதீஸ்வரர் கோயிலைக் கட்டியவர் யார்?",
+        oE: ["Rajaraja Chola I", "Rajendra Chola I", "Rajaraja Chola II", "Kulottunga Chola I"],
+        oT: ["முதலாம் ராஜராஜ சோழன்", "முதலாம் ராஜேந்திர சோழன்", "இரண்டாம் ராஜராஜ சோழன்", "முதலாம் குலோத்துங்க சோழன்"],
+        a: 2,
+        exp: "The Airavatesvara Temple at Darasuram was built by Rajaraja Chola II and added to the UNESCO list in 2004."
+    },
+    // 33
+    {
+        qE: "Who constructed the Virupaksha Temple at Pattadakal to commemorate Vikramaditya II's victory over the Pallavas?",
+        qT: "பல்லவர்கள் மீதான இரண்டாம் விக்ரமாதித்தனின் வெற்றியை நினைவுகூரப் பட்டடக்கல்லில் விருபாக்ஷர் கோயிலைக் கட்டியவர் யார்?",
+        oE: ["Queen Udayamati", "Queen Lokamahadevi", "Empress Bega Begum", "Queen Rudrama Devi"],
+        oT: ["ராணி உதயமதி", "ராணி லோகமகாதேவி", "பேரரசி பேகா பேகம்", "ராணி ருத்ரமாதேவி"],
+        a: 1,
+        exp: "The Virupaksha Temple at Pattadakal was constructed by Queen Lokamahadevi of the Badami Chalukya Dynasty."
+    },
+    // 34
+    {
+        qE: "Who was the Persian architect who designed Humayun's Tomb in New Delhi?",
+        qT: "புதுடெல்லியில் உள்ள ஹுமாயூன் கல்லறையை வடிவமைத்த பாரசீகக் கட்டிடக்கலைஞர் யார்?",
+        oE: ["Ustad Ahmad Lahori", "Mirak Mirza Ghiyas", "Ustad Isa", "Abul Fazl"],
+        oT: ["உஸ்தாத் அகமது லஹோரி", "மிராக் மிர்சா கியாஸ்", "உஸ்தாத் ஈசா", "அபுல் ஃபசல்"],
+        a: 1,
+        exp: "Humayun's Tomb was commissioned by Empress Bega Begum and designed by the Persian architect Mirak Mirza Ghiyas."
+    },
+    // 35
+    {
+        qE: "Which of the following is the only rack railway in India?",
+        qT: "பின்வருவனவற்றில் இந்தியாவின் ஒரே பற்சக்கர ரயில் பாதை எது?",
+        oE: ["Darjeeling Himalayan Railway", "Nilgiri Mountain Railway", "Kalka-Shimla Railway", "Matheran Hill Railway"],
+        oT: ["டார்ஜிலிங் இமயமலை ரயில்வே", "நீலகிரி மலை ரயில்வே", "கால்கா-சிம்லா ரயில்வே", "மதேரன் மலை ரயில்வே"],
+        a: 1,
+        exp: "The Nilgiri Mountain Railway in Tamil Nadu, added to UNESCO in 2005, is the only rack railway in India."
+    },
+    // 36
+    {
+        qE: "Which Indian archaeologist discovered the Rock Shelters of Bhimbetka in 1957?",
+        qT: "1957-ஆம் ஆண்டு பிம்பேட்கா பாறை வாழிடங்களைக் கண்டுபிடித்த இந்தியத் தொல்லியலாளர் யார்?",
+        oE: ["R. D. Banerji", "Daya Ram Sahni", "Dr. Vishnu Shridhar Wakankar", "B. B. Lal"],
+        oT: ["ஆர். டி. பானர்ஜி", "தயாராம் சஹானி", "டாக்டர் விஷ்ணு ஸ்ரீதர் வாகங்கர்", "பி. பி. லால்"],
+        a: 2,
+        exp: "The Rock Shelters of Bhimbetka were discovered in 1957 by Dr. Vishnu Shridhar Wakankar."
+    },
+    // 37
+    {
+        qE: "Who was the British architect who designed the Chhatrapati Shivaji Maharaj Terminus?",
+        qT: "சத்ரபதி சிவாஜி மகாராஜ் முனையத்தை வடிவமைத்த பிரிட்டிஷ் கட்டிடக்கலைஞர் யார்?",
+        oE: ["Edwin Lutyens", "Herbert Baker", "Frederick William Stevens", "Le Corbusier"],
+        oT: ["எட்வின் லுட்யன்ஸ்", "ஹெர்பர்ட் பேக்கர்", "ஃபிரடெரிக் வில்லியம் ஸ்டீவன்ஸ்", "லீ கார்பூசியர்"],
+        a: 2,
+        exp: "Chhatrapati Shivaji Maharaj Terminus was designed by British architect Frederick William Stevens in the High Victorian Gothic Revival style."
+    },
+    // 38
+    {
+        qE: "Where is the Vrihat Samrat Yantra, the world's largest stone sundial, located?",
+        qT: "உலகின் மிகப்பெரிய கல் சூரியக் கடிகாரமான விருஹத் சாம்ராட் யந்திரம் எங்கு அமைந்துள்ளது?",
+        oE: ["Red Fort, Delhi", "Jantar Mantar, Jaipur", "Fatehpur Sikri, Agra", "Amer Fort, Jaipur"],
+        oT: ["செங்கோட்டை, டெல்லி", "ஜந்தர் மந்தர், ஜெய்ப்பூர்", "ஃபதேபூர் சிக்ரி, ஆக்ரா", "ஆமெர் கோட்டை, ஜெய்ப்பூர்"],
+        a: 1,
+        exp: "Jantar Mantar in Jaipur, built by Maharaja Sawai Jai Singh II, houses the Vrihat Samrat Yantra, accurate to within two seconds."
+    },
+    // 39
+    {
+        qE: "Which fort among the Hill Forts of Rajasthan is renowned for having the second longest wall in the world?",
+        qT: "ராஜஸ்தானின் மலைக் கோட்டைகளில் உலகின் இரண்டாவது நீளமான சுவரைக் கொண்ட கோட்டை எது?",
+        oE: ["Chittorgarh Fort", "Kumbhalgarh Fort", "Gagron Fort", "Jaisalmer Fort"],
+        oT: ["சித்தோர்கர் கோட்டை", "கும்பல்கர் கோட்டை", "காக்ரோன் கோட்டை", "ஜெய்சால்மர் கோட்டை"],
+        a: 1,
+        exp: "Kumbhalgarh Fort in Rajsamand district features the second longest wall in the world."
+    },
+    // 40
+    {
+        qE: "Which Gupta emperor founded the ancient Nalanda Mahavihara in the 5th century CE?",
+        qT: "கி.பி. 5-ஆம் நூற்றாண்டில் பண்டைய நாலந்தா மகாவிஹாராவை நிறுவிய குப்தப் பேரரசர் யார்?",
+        oE: ["Chandragupta II", "Samudragupta", "Kumaragupta I", "Skandagupta"],
+        oT: ["இரண்டாம் சந்திரகுப்தர்", "சமுத்திரகுப்தர்", "முதலாம் குமாரகுப்தர்", "ஸ்கந்தகுப்தர்"],
+        a: 2,
+        exp: "Nalanda Mahavihara in Bihar was founded by Kumaragupta I of the Gupta Empire in the 5th century CE."
+    },
+    // 41
+    {
+        qE: "Which of the following is India's first and only Mixed UNESCO World Heritage Site?",
+        qT: "பின்வருவனவற்றில் இந்தியாவின் முதல் மற்றும் ஒரே கலப்பு யுனெஸ்கோ உலகப் பாரம்பரியத் தளம் எது?",
+        oE: ["Nanda Devi National Park", "Great Himalayan National Park", "Khangchendzonga National Park", "Sundarbans National Park"],
+        oT: ["நந்தா தேவி தேசியப் பூங்கா", "பெரு இமயமலை தேசியப் பூங்கா", "கஞ்சன்ஜங்கா தேசியப் பூங்கா", "சுந்தரவனத் தேசியப் பூங்கா"],
+        a: 2,
+        exp: "Khangchendzonga National Park in Sikkim is India's first and only Mixed World Heritage Site."
+    },
+    // 42
+    {
+        qE: "Which was the first Indian city to receive UNESCO World Heritage status?",
+        qT: "யுனெஸ்கோ உலகப் பாரம்பரிய அந்தஸ்தைப் பெற்ற முதல் இந்திய நகரம் எது?",
+        oE: ["Jaipur", "Ahmadabad", "Varanasi", "Udaipur"],
+        oT: ["ஜெய்ப்பூர்", "அகமதாபாத்", "வாரணாசி", "உதய்பூர்"],
+        a: 1,
+        exp: "The Historic City of Ahmadabad, founded by Sultan Ahmad Shah in 1411 CE, became the first Indian city to receive UNESCO World Heritage status in 2017."
+    },
+    // 43
+    {
+        qE: "In which Indian state is the Kakatiya Rudreshwara (Ramappa) Temple located?",
+        qT: "காகதீய ருத்ரேஸ்வரர் (ராமப்பா) கோயில் எந்த இந்திய மாநிலத்தில் அமைந்துள்ளது?",
+        oE: ["Andhra Pradesh", "Karnataka", "Telangana", "Maharashtra"],
+        oT: ["ஆந்திரப் பிரதேசம்", "கர்நாடகா", "தெலங்கானா", "மகாராஷ்டிரா"],
+        a: 2,
+        exp: "The Kakatiya Rudreshwara (Ramappa) Temple is located at Palampet in Mulugu district, Telangana."
+    },
+    // 44
+    {
+        qE: "Which fort in Tamil Nadu is included in the Maratha Military Landscapes of India?",
+        qT: "இந்தியாவின் மராட்டிய இராணுவ நிலப்பரப்புகள் பட்டியலில் இடம்பெற்றுள்ள தமிழ்நாட்டுக் கோட்டை எது?",
+        oE: ["Vellore Fort", "Gingee Fort", "Dindigul Fort", "Tiruchirappalli Rock Fort"],
+        oT: ["வேலூர் கோட்டை", "செஞ்சிக் கோட்டை", "திண்டுக்கல் கோட்டை", "திருச்சிராப்பள்ளி மலைக்கோட்டை"],
+        a: 1,
+        exp: "Gingee Fort in Tamil Nadu, known as the 'Troy of the East', is the 1 fort outside Maharashtra included among the 12 forts of the Maratha Military Landscapes."
+    },
+    // 45
+    {
+        qE: "Which stupa at Sarnath commemorates the spot where Gautama Buddha met his first five disciples?",
+        qT: "சாரநாத்தில் கௌதம புத்தர் தனது முதல் ஐந்து சீடர்களைச் சந்தித்த இடத்தை நினைவுகூரும் ஸ்தூபி எது?",
+        oE: ["Dhamek Stupa", "Chaukhandi Stupa", "Sanchi Stupa", "Bharhut Stupa"],
+        oT: ["தாமேக் ஸ்தூபி", "சௌகண்டி ஸ்தூபி", "சாஞ்சி ஸ்தூபி", "பர்ஹுத் ஸ்தூபி"],
+        a: 1,
+        exp: "Chaukhandi Stupa commemorates where Buddha met his first five disciples, while Dhamek Stupa marks the spot of his first sermon."
+    },
+
+    // ================= 5 STATEMENT-BASED QUESTIONS (Q46 - Q50) =================
+    // 46 (Ans: 0 - Only 1)
+    {
+        qE: "Consider the following statements:\n1. The Ajanta Caves consist of 29 Buddhist rock-cut caves.\n2. The Ellora Caves are depicted on the reverse of the new ₹10 Indian currency note.",
+        qT: "பின்வரும் கூற்றுகளைக் கவனியுங்கள்:\n1. அஜந்தா குகைகள் 29 பௌத்தக் குடைவரைக் குகைகளைக் கொண்டுள்ளன.\n2. எல்லோரா குகைகள் புதிய ₹10 இந்திய ரூபாய் நோட்டின் பின்புறத்தில் இடம்பெற்றுள்ளன.",
+        oE: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"],
+        oT: ["1 மட்டும்", "2 மட்டும்", "1 மற்றும் 2 இரண்டும்", "1 மற்றும் 2 இரண்டும் இல்லை"],
+        a: 0,
+        exp: "Statement 1 is correct. Statement 2 is incorrect because Ellora Caves are depicted on the reverse of the new ₹20 currency note, while the Konark Wheel is on the ₹10 note."
+    },
+    // 47 (Ans: 1 - Only 2)
+    {
+        qE: "Consider the following statements:\n1. Keoladeo National Park is located in Assam.\n2. Manas Wildlife Sanctuary is contiguous with Royal Manas in Bhutan.",
+        qT: "பின்வரும் கூற்றுகளைக் கவனியுங்கள்:\n1. கியோலடியோ தேசியப் பூங்கா அசாம் மாநிலத்தில் அமைந்துள்ளது.\n2. மனாஸ் வனவிலங்கு சரணாலயம் பூட்டானில் உள்ள ராயல் மனாஸ் பகுதியுடன் இணைந்துள்ளது.",
+        oE: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"],
+        oT: ["1 மட்டும்", "2 மட்டும்", "1 மற்றும் 2 இரண்டும்", "1 மற்றும் 2 இரண்டும் இல்லை"],
+        a: 1,
+        exp: "Statement 1 is incorrect because Keoladeo National Park is located in Bharatpur, Rajasthan. Statement 2 is correct."
+    },
+    // 48 (Ans: 2 - Both 1 and 2)
+    {
+        qE: "Consider the following statements:\n1. Dholavira features a tripartite layout consisting of a Citadel, Middle Town, and Lower Town.\n2. Santiniketan evolved into Visva-Bharati University in 1921.",
+        qT: "பின்வரும் கூற்றுகளைக் கவனியுங்கள்:\n1. தோலாவிரா மேல்நகரம், இடைநகரம் மற்றும் கீழ்நகரம் ஆகிய மூன்றடுக்கு நகர அமைப்பைக் கொண்டுள்ளது.\n2. சாந்திநிகேதன் 1921-இல் விஸ்வ-பாரதி பல்கலைக்கழகமாகப் பரிணமித்தது.",
+        oE: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"],
+        oT: ["1 மட்டும்", "2 மட்டும்", "1 மற்றும் 2 இரண்டும்", "1 மற்றும் 2 இரண்டும் இல்லை"],
+        a: 2,
+        exp: "Both statements are correct. Dholavira is famous for its tripartite layout and water harvesting system, and Santiniketan became Visva-Bharati University in 1921."
+    },
+    // 49 (Ans: 3 - Neither 1 nor 2)
+    {
+        qE: "Consider the following statements:\n1. The Moidams of the Ahom Dynasty are located in Meghalaya.\n2. The Sacred Ensembles of the Hoysalas are located in Tamil Nadu.",
+        qT: "பின்வரும் கூற்றுகளைக் கவனியுங்கள்:\n1. அகோம் வம்சத்தின் மொய்தாம்கள் மேகாலயா மாநிலத்தில் அமைந்துள்ளன.\n2. ஹொய்சாளர்களின் புனிதக் கோயில் தொகுப்புகள் தமிழ்நாட்டில் அமைந்துள்ளன.",
+        oE: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"],
+        oT: ["1 மட்டும்", "2 மட்டும்", "1 மற்றும் 2 இரண்டும்", "1 மற்றும் 2 இரண்டும் இல்லை"],
+        a: 3,
+        exp: "Both statements are incorrect. The Moidams are located in Charaideo district, Assam, and the Sacred Ensembles of the Hoysalas are located in Karnataka."
+    },
+    // 50 (Ans: 0 - Only 1)
+    {
+        qE: "Consider the following statements:\n1. The Western Ghats traverse six Indian states.\n2. The Capitol Complex in Chandigarh was designed by Frederick William Stevens.",
+        qT: "பின்வரும் கூற்றுகளைக் கவனியுங்கள்:\n1. மேற்குத் தொடர்ச்சி மலைகள் ஆறு இந்திய மாநிலங்களில் பரவியுள்ளன.\n2. சண்டிகரில் உள்ள கேபிடல் வளாகம் ஃபிரடெரிக் வில்லியம் ஸ்டீவன்ஸால் வடிவமைக்கப்பட்டது.",
+        oE: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"],
+        oT: ["1 மட்டும்", "2 மட்டும்", "1 மற்றும் 2 இரண்டும்", "1 மற்றும் 2 இரண்டும் இல்லை"],
+        a: 0,
+        exp: "Statement 1 is correct (Gujarat, Maharashtra, Goa, Karnataka, Kerala, and Tamil Nadu). Statement 2 is incorrect because the Capitol Complex in Chandigarh was designed by Swiss-French architect Le Corbusier."
+    }
+];
+
+let quizData = [];
+let currentQ = 0;
+let answers = [];
+let status = []; // 0: Not Visited, 1: Not Answered, 2: Answered, 3: Marked, 4: Answered & Marked
+
+// Shuffle array algorithm
+function shuffleArray(array) {
+    let shuffled = array.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+// Switch Views
+function switchView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+}
+
+function startQuiz() {
+    quizData = shuffleArray(baseQuizData);
+    answers = new Array(50).fill(null);
+    status = new Array(50).fill(0);
+    
+    switchView('view-quiz');
+    
+    buildPalette();
+    loadQuestion(0);
+    startTimer();
+    
+    if(window.innerWidth <= 768) {
+        document.getElementById('close-palette-btn').style.display = 'block';
+    }
+}
+
+function buildPalette() {
+    const grid = document.getElementById('palette-grid');
+    grid.innerHTML = '';
+    for(let i=0; i<50; i++) {
+        let bubble = document.createElement('div');
+        bubble.className = 'q-bubble status-' + status[i];
+        bubble.innerText = (i+1);
+        bubble.id = 'pb-' + i;
+        bubble.onclick = () => jumpToQuestion(i);
+        grid.appendChild(bubble);
+    }
+}
+
+function syncAnswer() {
+    let selected = document.querySelector('input[name="opt"]:checked');
+    if(selected) {
+        answers[currentQ] = parseInt(selected.value);
+    } else {
+        answers[currentQ] = null;
+    }
+}
+
+function updatePaletteCSS() {
+    for(let i=0; i<50; i++) {
+        let bubble = document.getElementById('pb-' + i);
+        bubble.className = 'q-bubble status-' + status[i];
+        if(i === currentQ) bubble.classList.add('active');
+    }
+}
+
+function loadQuestion(index) {
+    if(status[currentQ] === 0) {
+        status[currentQ] = (answers[currentQ] !== null) ? 2 : 1;
+    }
+    
+    currentQ = index;
+    if(status[currentQ] === 0) status[currentQ] = 1;
+
+    document.getElementById('q-no').innerText = "Question " + (currentQ + 1);
+    
+    // Format statement questions with line breaks
+    let qTextEn = quizData[currentQ].qE.replace(/\n/g, "<br>");
+    let qTextTa = quizData[currentQ].qT.replace(/\n/g, "<br>");
+    
+    document.getElementById('q-text-en').innerHTML = qTextEn;
+    document.getElementById('q-text-ta').innerHTML = qTextTa;
+
+    let optHtml = '';
+    for(let i=0; i<4; i++) {
+        let checked = (answers[currentQ] === i) ? 'checked' : '';
+        optHtml += `
+            <label class="option-label">
+                <input type="radio" name="opt" value="${i}" ${checked} onchange="syncAnswer()">
+                <div>
+                    <div>${quizData[currentQ].oE[i]}</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px;">${quizData[currentQ].oT[i]}</div>
+                </div>
+            </label>
+        `;
+    }
+    document.getElementById('options-container').innerHTML = optHtml;
+    
+    // Clear scroll position to top of container when moving to a new question
+    document.querySelector('.question-scroll-area').scrollTop = 0;
+    
+    updatePaletteCSS();
+}
+
+function jumpToQuestion(i) {
+    syncAnswer();
+    loadQuestion(i);
+    if(window.innerWidth <= 768) togglePalette();
+}
+
+function saveAndNext() {
+    syncAnswer();
+    status[currentQ] = (answers[currentQ] !== null) ? 2 : 1;
+    if(currentQ < 49) loadQuestion(currentQ + 1);
+    else updatePaletteCSS();
+}
+
+function markAndNext() {
+    syncAnswer();
+    status[currentQ] = (answers[currentQ] !== null) ? 4 : 3;
+    if(currentQ < 49) loadQuestion(currentQ + 1);
+    else updatePaletteCSS();
+}
+
+function clearResponse() {
+    answers[currentQ] = null;
+    status[currentQ] = 1;
+    loadQuestion(currentQ);
+}
+
+function prevQuestion() {
+    syncAnswer();
+    if(currentQ > 0) loadQuestion(currentQ - 1);
+}
+
+function togglePalette() {
+    document.getElementById('palette').classList.toggle('open');
+}
+
+// Timer Logic
+let timeLimit = 15 * 60; // 15 mins
+let timerInterval;
+
+function startTimer() {
+    timerInterval = setInterval(() => {
+        timeLimit--;
+        let m = Math.floor(timeLimit / 60).toString().padStart(2, '0');
+        let s = (timeLimit % 60).toString().padStart(2, '0');
+        document.getElementById('timer').innerText = m + ':' + s;
+        if(timeLimit <= 0) {
+            clearInterval(timerInterval);
+            submitExam();
+        }
+    }, 1000);
+}
+
+// Custom Submit Modals
+function showSubmitConfirm() {
+    syncAnswer();
+    let unattempted = answers.filter(a => a === null).length;
+    let warningTxt = document.getElementById('unanswered-warning');
+    if(unattempted > 0) {
+        warningTxt.innerText = `You have ${unattempted} unattempted questions!`;
+        warningTxt.style.display = 'block';
+    } else {
+        warningTxt.style.display = 'none';
+    }
+    document.getElementById('confirm-modal').style.display = 'flex';
+}
+
+function closeSubmitConfirm() {
+    document.getElementById('confirm-modal').style.display = 'none';
+}
+
+function submitExam() {
+    clearInterval(timerInterval);
+    document.getElementById('confirm-modal').style.display = 'none';
+    syncAnswer();
+    
+    let correct = 0, wrong = 0, unattempted = 0;
+    
+    quizData.forEach((q, i) => {
+        if(answers[i] === null) unattempted++;
+        else if(answers[i] === q.a) correct++;
+        else wrong++;
+    });
+    
+    let score = correct - (wrong * 0.3333);
+    
+    document.getElementById('res-score').innerText = score.toFixed(2);
+    document.getElementById('res-correct').innerText = correct;
+    document.getElementById('res-wrong').innerText = wrong;
+    document.getElementById('res-unattempted').innerText = unattempted;
+    
+    switchView('view-results');
+}
+
+// Detailed Review with Tabs
+function showDetailedReview() {
+    let htmlCorrect = '';
+    let htmlWrong = '';
+    let htmlUnattempted = '';
+    
+    quizData.forEach((q, i) => {
+        let isAttempted = answers[i] !== null;
+        let isCorrect = isAttempted && answers[i] === q.a;
+        let cssClass = !isAttempted ? 'unattempted' : (isCorrect ? 'correct' : 'wrong');
+        
+        let chosenText = isAttempted ? q.oE[answers[i]] : "None";
+        let correctText = q.oE[q.a];
+        
+        let qText = q.qE.replace(/\n/g, "<br>");
+        let tagHtml = !isAttempted ? `<span class="answer-tag tag-unattempted">Unattempted</span>` : 
+                      isCorrect ? `<span class="answer-tag tag-correct">Correct (+1.0)</span>` : 
+                      `<span class="answer-tag tag-wrong">Incorrect (-0.33)</span>`;
+                      
+        let explanationText = q.exp || `The correct answer is ${correctText}.`;
+        
+        let itemHtml = `
+            <div class="review-item ${cssClass}">
+                <strong style="font-size: 1.1rem; color: #fff;">Q${i+1}: ${qText}</strong><br>
+                ${tagHtml}
+                <div style="margin-top: 15px; font-size: 0.95rem; display: grid; gap: 8px;">
+                    <div><span style="color: var(--text-secondary)">Your Answer:</span> <span style="color: ${!isAttempted ? '#9e9e9e' : isCorrect ? 'var(--color-answered)' : 'var(--color-not-answered)'}">${chosenText}</span></div>
+                    <div><span style="color: var(--text-secondary)">Correct Answer:</span> <span style="color: var(--color-answered); font-weight: bold;">${correctText}</span></div>
+                </div>
+                <div class="explanation-box">
+                    <strong style="color: var(--primary-cyan);">Explanation:</strong><br>
+                    ${explanationText}
+                </div>
+            </div>
+        `;
+        
+        if (!isAttempted) htmlUnattempted += itemHtml;
+        else if (isCorrect) htmlCorrect += itemHtml;
+        else htmlWrong += itemHtml;
+    });
+    
+    // Inject Content
+    document.getElementById('review-content-correct').innerHTML = htmlCorrect || "<div style='text-align:center; padding: 30px; color: var(--text-secondary);'>No correct answers recorded in this session.</div>";
+    document.getElementById('review-content-wrong').innerHTML = htmlWrong || "<div style='text-align:center; padding: 30px; color: var(--color-answered); font-weight: bold;'>Amazing job! You had no incorrect answers!</div>";
+    document.getElementById('review-content-unattempted').innerHTML = htmlUnattempted || "<div style='text-align:center; padding: 30px; color: var(--text-secondary);'>You attempted every single question. Great effort!</div>";
+    
+    // Setup Tab counts
+    document.getElementById('tab-count-correct').innerText = document.getElementById('res-correct').innerText;
+    document.getElementById('tab-count-wrong').innerText = document.getElementById('res-wrong').innerText;
+    document.getElementById('tab-count-unattempted').innerText = document.getElementById('res-unattempted').innerText;
+    
+    // Display Section
+    document.getElementById('post-exam-actions').style.display = 'none';
+    document.getElementById('detailed-review-section').style.display = 'block';
+    
+    // Default to the first tab that has data
+    if (htmlWrong) switchTab('wrong');
+    else if (htmlCorrect) switchTab('correct');
+    else switchTab('unattempted');
+}
+
+function switchTab(tabId) {
+    // Reset buttons and content visibility
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    // Activate chosen tab
+    document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+    document.getElementById(`review-content-${tabId}`).classList.add('active');
+}
+</script>
+</body>
+</html>
+
+```
